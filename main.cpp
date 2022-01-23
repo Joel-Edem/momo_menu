@@ -4,7 +4,7 @@
 
 int isRunning = 1;
 
-void Clear()
+void clear_screen()
 // Clears text from console
 {
 #if defined _WIN32
@@ -31,7 +31,6 @@ int validate_input(std::string& input, int max_opts=-1){
      // if we cant convert input to int , then input is not valid
 
 };
-
 void draw_box(int line_length)
 {
     // draws dashes around menus. line length is the width of the line to be drawn
@@ -144,7 +143,9 @@ Screen *MomoScreen::handle_selection(int selection)
             stms_ptr->display();
             return stms_ptr;
         default:
-            this->display();
+            this->display(false);
+            std::cout << "sorry, this feature is not yet available\n"
+                "Please Select another option\n\nEnter your selection==>";
             return this;
         }
 }
@@ -164,7 +165,9 @@ Screen *HomeScreen::handle_selection(int selection)
         ms_ptr->display();
         return ms_ptr;
     default:
-        this->display();
+        this->display(false);
+        std::cout << "sorry, this feature is not yet available\n"
+                     "Please Select another option\n\nEnter your selection==>";
         return this;
     }
 }
@@ -177,26 +180,25 @@ Screen *SendToMomoUserScreen::handle_selection(int selection)
         return hs_ptr;
 }
 
+
 int main()
 {
     show_welcome_message(); // display welcome message
-    sleep(1);
-    Clear();                // wait for welcome message to display and clear screen
+    sleep(1); clear_screen(); // wait for welcome message to display and clear screen
     HomeScreen home_screen; // create the home screen object and display menuL options
 
-    Screen *currentScreen = &home_screen; // create a pointer to the current screen using the base class so all subclasses can access pointer1
+    Screen *currentScreen = &home_screen; // create a pointer to the current screen using 
+                                          //the base class so all subclasses can access pointer
     currentScreen->display();             // display the currnent screen and
     std::string input;                    //get  user input
-
     while (isRunning) // listen for commands
     {
         getline(std::cin, input);
-        int opt = validate_input(input, currentScreen->num_opts);
-        if (opt >-1){
-            Clear();
-            currentScreen = currentScreen->handle_selection(opt);
-        }else{
-            Clear();
+        int opt = validate_input(input, currentScreen->num_opts); 
+        clear_screen();
+        // if input is valid call handler 
+        if (opt >-1){currentScreen = currentScreen->handle_selection(opt);}
+        else{ // retry for valid option
             currentScreen->display(false); // clear the screen and display  options
             std::cerr << "Select a valid option\n==>  ";
         }
