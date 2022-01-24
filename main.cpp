@@ -90,10 +90,20 @@ bool is_mtn_number(std::string phone_number)
 }
 void show_transaction_failed_message()
 {
-    draw_box(45);std::cout<<"\n\n\n\t\tTransaction Failed\n\n\n";draw_box(45);
+    draw_box(45);std::cout<<"\n\n\n\t  Transaction Failed\n\n\n";draw_box(45);
     sleep(2);clear_screen();
 }
 
+void show_success_message(std::string recipient, int amount)
+{
+    draw_box(45);std::cout<<"\n\n\n"
+                            "\tSucess\n"
+                            "\tYou have transfered GHS¢ "<<amount<<"\n"
+                            "\tto "<<recipient<<".\n"
+                            "\tYour new balance is GHS¢" <<user_account_ptr->balace<<"\n"
+                            "\n\n\n";draw_box(45);
+    sleep(3);clear_screen();
+}
 
 // BASE class for all screens
 class Screen
@@ -149,6 +159,30 @@ public:
     Screen *handle_selection(long int selection);
 };
 
+class ConfirmTransactionScreen : public Screen
+{
+public:
+    std::string phone_number;
+    int amount;
+    ConfirmTransactionScreen(std::string _phone_number, int _amount)
+     { phone_number=_phone_number;
+        amount =_amount;
+        num_opts = -1; } 
+
+    void display(bool showPrompt=true)
+    {
+        //displays options
+        draw_box(45);
+        std::cout << "\n\t\tConfirm transaction\n"
+                     "\n\t\tSend GHS ¢"<<amount<<" to "<< phone_number<<"?\n\n";
+        std::cout <<"\t1\tConfirm\n"
+                    "\t0\tCancel\n\n";
+        draw_box(45);
+        if(showPrompt == 1){std::cout << "Enter your selection==> ";}
+    }
+    Screen *handle_selection(long int selection);
+};
+
 class MomoScreen : public Screen
 {
 public:
@@ -198,15 +232,19 @@ public:
     Screen *handle_selection(long int selection);
 };
 
+HomeScreen *return_home(){
+     HomeScreen *hs_ptr;
+        hs_ptr = new HomeScreen();
+        hs_ptr->display();
+        return hs_ptr;
+}
+
 Screen *MomoScreen::handle_selection(long int selection)
 {
     switch (selection)
         {
         case 0: // Go back to home screen
-            HomeScreen *hs_ptr;
-            hs_ptr = new HomeScreen();
-            hs_ptr->display();
-            return hs_ptr;
+            return return_home();
         case 1: //  transfer to momo user screen
             SendToMomoUserScreen *stms_ptr;
             stms_ptr = new SendToMomoUserScreen();
@@ -279,30 +317,60 @@ Screen *SendToMomoUserScreen::handle_selection(long int selection)
         // after 3 retries return to home screen
         // todo transaction failed screen;
         show_transaction_failed_message();
-        HomeScreen *hs_ptr;
-        hs_ptr = new HomeScreen();
-        hs_ptr->display();
-        return hs_ptr;
+        return return_home();
     }
 
 }
 
- Screen *TransactionAmtScreen::handle_selection(long int selection){
-     std::cout<<"Sending "<<selection<<"to "<<phone_number<<std::endl;
-    
-    if (selection > user_account_ptr->balace){
-        // amt too large
-        
-    }else{
-        // send to confirmation screen
-    }
+Screen *TransactionAmtScreen::handle_selection(long int selection){
     //check if amt is available in account
     // if amt is unavailable retry.
-    // if available send to confirmation page 
-     return this;
+    // if available send to confirmation page     
+    if (selection > user_account_ptr->balace){
+        // amt too large
+        //display insufficient fund msg
+        if (this->num_retries < 3){
+            this->num_retries++;
+            draw_box(45);
+            std::cout<<"\n\nInsufficient funds.\nYour current balance is GHS¢ "<<user_account_ptr->balace<<"\n\n"<<std::endl;
+            draw_box(45);
+            sleep(2); clear_screen();
+            this->display();
+            return this;
+        }else{
+            show_transaction_failed_message();
+            return return_home();
+        }
+
+    }else{
+        // send to confirmation screen
+        ConfirmTransactionScreen *ms_ptr;
+        ms_ptr = new ConfirmTransactionScreen(this->phone_number, selection);
+        ms_ptr->display();
+        return ms_ptr;
+    }
+
+     
  }
 
-
+Screen *ConfirmTransactionScreen::handle_selection(long int selection){
+    // if 1 perform transaction
+    if(selection == 1){
+        // subtract from balance
+        user_account_ptr->balace-=this->amount;
+        // show success screen 
+        show_success_message(this->phone_number, this->amount);
+        // return home
+        return return_home();
+    }else if(selection == 0){ // if 0 cancel
+        show_transaction_failed_message();
+        return return_home();
+    }else{//else show screen again
+        this->display(false);
+        std::cout<<"Invalid Option\nSelect an option ==>";
+        return this;
+    }
+}
 
 int main()
 {
