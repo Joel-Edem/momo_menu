@@ -290,7 +290,12 @@ Screen *SendToMomoUserScreen::handle_selection(long int selection)
  Screen *TransactionAmtScreen::handle_selection(long int selection){
      std::cout<<"Sending "<<selection<<"to "<<phone_number<<std::endl;
     
-
+    if (selection > user_account_ptr->balace){
+        // amt too large
+        
+    }else{
+        // send to confirmation screen
+    }
     //check if amt is available in account
     // if amt is unavailable retry.
     // if available send to confirmation page 
