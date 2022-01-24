@@ -1,6 +1,12 @@
 #include <iostream>
-#include <unistd.h>
 #include <string>
+
+#ifdef _WIN32
+    #include <windows.h>
+#else 
+    #include <unistd.h>
+#endif
+
 
 int isRunning = 1;
 
@@ -172,7 +178,6 @@ public:
     Screen *handle_selection(long int selection);
 };
 
-
 class SendToOtherNetworkScreen : public Screen
 {
 public:
@@ -243,7 +248,6 @@ public:
     Screen *handle_selection(long int selection);
 };
 
-
 class AllowCashOutScreen : public Screen
 {
 public:
@@ -262,7 +266,6 @@ public:
     }
     Screen *handle_selection(long int selection);
 };
-
 
 class BalanceScreen : public Screen
 {
@@ -493,7 +496,6 @@ Screen *MyWalletScreen::handle_selection(long int selection)
 
 }
 
-
 Screen *AllowCashOutScreen::handle_selection(long int selection)
 {   
 
@@ -509,14 +511,13 @@ Screen *AllowCashOutScreen::handle_selection(long int selection)
     return return_home();
 
 }
+
 Screen *CashoutAllowedScreen::handle_selection(long int selection)
 {   
     
     return return_home();
 
 }
-
-
 
 Screen *BalanceScreen::handle_selection(long int selection)
 {   
