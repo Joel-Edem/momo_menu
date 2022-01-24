@@ -97,7 +97,7 @@ void show_transaction_failed_message()
 void show_success_message(std::string recipient, int amount)
 {
     draw_box(45);std::cout<<"\n\n\n"
-                            "\tSucess\n"
+                            "\t\tSucess\n\n"
                             "\tYou have transfered GHS¢ "<<amount<<"\n"
                             "\tto "<<recipient<<".\n"
                             "\tYour new balance is GHS¢" <<user_account_ptr->balace<<"\n"
@@ -173,8 +173,8 @@ public:
     {
         //displays options
         draw_box(45);
-        std::cout << "\n\t\tConfirm transaction\n"
-                     "\n\t\tSend GHS ¢"<<amount<<" to "<< phone_number<<"?\n\n";
+        std::cout << "\n\tConfirm transaction\n"
+                     "\n\tSend GHS ¢"<<amount<<" to "<< phone_number<<"?\n\n";
         std::cout <<"\t1\tConfirm\n"
                     "\t0\tCancel\n\n";
         draw_box(45);
@@ -203,6 +203,28 @@ public:
                      "\t0\tMain Menu\n\n";
         draw_box(45);
         if(showPrompt == 1){std::cout << "Enter your selection==> ";}
+    }
+    Screen *handle_selection(long int selection);
+};
+
+class VerifyPasswordScreen:public Screen{
+public:
+    std::string phone_number;
+    int amount;
+    int num_retries;
+    VerifyPasswordScreen(std::string _phone_number, int _amount)
+     { phone_number=_phone_number;
+        amount =_amount;
+        num_opts = -1;
+        num_retries =0; } 
+
+    void display(bool showPrompt=true)
+    {
+        //displays options
+        draw_box(45);
+        std::cout << "\n\t\tEnter your PIN\n\n\n";
+        draw_box(45);
+        if(showPrompt == 1){std::cout << "PIN ==> ";}
     }
     Screen *handle_selection(long int selection);
 };
@@ -323,9 +345,6 @@ Screen *SendToMomoUserScreen::handle_selection(long int selection)
 }
 
 Screen *TransactionAmtScreen::handle_selection(long int selection){
-    //check if amt is available in account
-    // if amt is unavailable retry.
-    // if available send to confirmation page     
     if (selection > user_account_ptr->balace){
         // amt too large
         //display insufficient fund msg
@@ -356,12 +375,10 @@ Screen *TransactionAmtScreen::handle_selection(long int selection){
 Screen *ConfirmTransactionScreen::handle_selection(long int selection){
     // if 1 perform transaction
     if(selection == 1){
-        // subtract from balance
-        user_account_ptr->balace-=this->amount;
-        // show success screen 
-        show_success_message(this->phone_number, this->amount);
-        // return home
-        return return_home();
+        VerifyPasswordScreen *vps_ptr;
+        vps_ptr = new VerifyPasswordScreen(this->phone_number, this->amount);
+        vps_ptr->display();
+        return vps_ptr;
     }else if(selection == 0){ // if 0 cancel
         show_transaction_failed_message();
         return return_home();
@@ -371,6 +388,36 @@ Screen *ConfirmTransactionScreen::handle_selection(long int selection){
         return this;
     }
 }
+
+
+Screen *VerifyPasswordScreen::handle_selection(long int selection){
+    if (selection != user_account_ptr->pin){
+        // amt too large
+        //display insufficient fund msg
+        if (this->num_retries < 3){
+            this->num_retries++;
+            draw_box(45);
+            std::cout<<"\n\nInvalid Pin. Try again\nYou have " <<3-this->num_retries<<" attempts left\n\n"<<std::endl;
+            draw_box(45);
+            sleep(2); clear_screen();
+            this->display();
+            return this;
+        }else{
+            show_transaction_failed_message();
+            return return_home();
+        }
+
+    }else{ // SUCCESS PRERFOM TRANSFER
+         // subtract from balance
+        user_account_ptr->balace-=this->amount;
+        // show success screen 
+        show_success_message(this->phone_number, this->amount);
+        // return home
+        return return_home();
+    }
+
+     
+ }
 
 int main()
 {
