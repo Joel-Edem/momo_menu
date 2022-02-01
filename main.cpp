@@ -60,7 +60,7 @@ void draw_box(int line_length)
     std::cout << std::endl;
 }
 
-struct UserAccount
+struct UserAccount // Dummy user account with customer info
 {
 public:
     std::string phone_number;
@@ -82,7 +82,7 @@ public:
         airtime = _airtime;
     }
 };
-UserAccount *user_account_ptr;
+UserAccount *user_account_ptr; // we create a global pointer to our user account
 
 void buyAirtime_func(int amt)
 {
@@ -93,9 +93,9 @@ void buyAirtime_func(int amt)
 
 void buyDataBundle_func(int amt)
 {
-
-    std::cout<<amt<<std::endl;
-    float data;
+    // adds data to  user account.
+    std::cout << amt << std::endl;
+    float data; // convert amount paid to equivalent data
     switch (amt)
     {
     case 50:
@@ -119,15 +119,16 @@ void buyDataBundle_func(int amt)
     default:
         return;
     }
-    
-    user_account_ptr->balance-=amt;
-    user_account_ptr->data+=data;
+
+    user_account_ptr->balance -= amt; // remove amout paid
+    user_account_ptr->data += data;   // add data to account
 }
 
 void buyVoiceBundle_func(int amt)
 {
+    // adds Mins to  user account.
     int mins;
-    switch (amt)
+    switch (amt) // convert amount paid to equivalent mins
     {
     case 40:
         mins = 120;
@@ -148,13 +149,14 @@ void buyVoiceBundle_func(int amt)
         mins = 10;
         break;
     }
-    
-    user_account_ptr->balance-=amt;
-    user_account_ptr->mins+=mins;
+
+    user_account_ptr->balance -= amt;
+    user_account_ptr->mins += mins;
 }
 
 std::string phone_num_to_str(long int input)
 {
+    // converts phone number to string
     std::string output = "0";
     output += std::to_string(input);
     return output;
@@ -162,6 +164,7 @@ std::string phone_num_to_str(long int input)
 
 bool is_mtn_number(std::string phone_number)
 {
+    // Checks if number constains a valid prefix for mtn networks
     // (024), (054), (055) (059)
     std::string mtn_prefix[] = {"024", "054", "055", "059"};
 
@@ -176,10 +179,10 @@ bool is_mtn_number(std::string phone_number)
     return false;
 }
 
-void show_transaction_failed_message()
-{
+void show_transaction_failed_message(std::string val = "Transaction Failed")
+{ // Flashes Transaction failed message and clears screen
     draw_box(45);
-    std::cout << "\n\n\n\t  Transaction Failed\n\n\n";
+    std::cout << "\n\n\n\t  " << val << "\n\n\n";
     draw_box(45);
     sleep(2);
     clear_screen();
@@ -198,7 +201,8 @@ void show_welcome_message()
 }
 
 void show_success_message(std::string recipient, int amount)
-{
+{   // Displays a success message after a transfer ,
+    // the recipient can be a phone number or a name
     draw_box(45);
     std::cout << "\n\n\n"
                  "\t\tSucess\n\n"
@@ -218,23 +222,32 @@ void show_success_message(std::string recipient, int amount)
 class Screen
 {
 public:
-    int num_opts;
+    int num_opts; // Number of options a screen will display.
+    // -1 if the screen requires the raw data or has no options
     virtual void display(bool showPrompt = true){};
+    // Prints options of current screen on to console
     virtual Screen *(handle_selection)(long int selection) { return new Screen; };
+    // Handles selected input on current screen
 };
-
+// Base Class for all actinons.
+// Actions are screens that do not handle user input
+//  but may display a message while performing action
 class Action
 {
-    public:
-        int arg;
-        std::string msg;
-        handle_purchase_func_ptr handle_purchase_ptr;
-        
-        virtual void perform_action(){return ;};
-}; 
+public:
+    int arg;         // the value of the argument to be passed to the purchase function
+    std::string msg; // message to display if any
+    handle_purchase_func_ptr handle_purchase_ptr;
+    // a pointer to a function that performs the action
 
+    virtual void perform_action() { return; };
+    // todo use templates to add params to func
+};
+
+// ALLOWS USER TO ENTER AMOUNT TO TRANSFER DURING MOMO TRANSFER
 class TransactionAmtScreen : public Screen
 {
+
 public:
     int num_retries;
     std::string phone_number;
@@ -262,6 +275,7 @@ public:
     Screen *handle_selection(long int selection);
 };
 
+// GETS AND VALIDATES RECEIVER OF MOMO TRANSACTION IS AN MTN USER
 class SendToMomoUserScreen : public Screen
 {
 public:
@@ -301,7 +315,8 @@ public:
     }
     Screen *handle_selection(long int selection);
 };
-
+// TODO: ADD ADDITIONAL CHARGES
+// VALIDATES PHONE NUMBERS ARE NOT MTN NUMBERS FOR MOMO TRANSFER
 class SendToOtherNetworkScreen : public Screen
 {
 public:
@@ -349,7 +364,7 @@ public:
     }
     Screen *handle_selection(long int selection);
 };
-
+// SELECT NETWORK TO TRANSFER MONEY TO
 class SelectNetworkScreen : public Screen
 {
 public:
@@ -373,7 +388,7 @@ public:
     }
     Screen *handle_selection(long int selection);
 };
-
+// MENU TO DISPLAY WALLET OR HISTORY
 class MyWalletScreen : public Screen
 {
 public:
@@ -396,7 +411,7 @@ public:
     }
     Screen *handle_selection(long int selection);
 };
-
+// DISPLAYS AVAILABLE BUNDLE TYPES
 class AirtimeAndBundlesScreen : public Screen
 {
 public:
@@ -421,6 +436,7 @@ public:
     Screen *handle_selection(long int selection);
 };
 
+
 class AllowCashOutScreen : public Screen
 {
 public:
@@ -443,6 +459,7 @@ public:
     Screen *handle_selection(long int selection);
 };
 
+// DISPLAYS  USERS MOMO, AIRTIME , DATA AND VOICE  BALANCE 
 class BalanceScreen : public Screen
 {
 public:
@@ -456,19 +473,19 @@ public:
                      "\n\t\tCurrent Balance\n\n";
 
         std::cout << "\tCurrent Momo Balance\tGHS¢ "
-                    << user_account_ptr->balance << "\n"
-                    << "\tAirtime             \tGHS¢ "
+                  << user_account_ptr->balance << "\n"
+                  << "\tAirtime             \tGHS¢ "
                   << user_account_ptr->airtime << "\n"
-                    << "\tMinutes             \t"
+                  << "\tMinutes             \t"
                   << user_account_ptr->mins << " Mins\n"
-                  <<"\tData                \t"
+                  << "\tData                \t"
                   << user_account_ptr->data << " Gb\n"
-                  <<"\n\n\t\tPress 0 Back\n\n";
+                  << "\n\n\t\tPress 0 Back\n\n";
         draw_box(45);
     }
     Screen *handle_selection(long int selection);
 };
-
+// ALLOWS USERS TO CONFIRM SELECTION BEFORE AUTHENTICATION
 class ConfirmTransactionScreen : public Screen
 {
 public:
@@ -505,12 +522,11 @@ public:
     std::string item;
     int amount;
 
-     handle_purchase_func_ptr handle_purchase_ptr;
-     ConfirmPurchaseScreen(std::string _item, int _amount,
-     handle_purchase_func_ptr _handle_purchase) : 
-     item(_item),
-     amount(_amount),
-     handle_purchase_ptr(_handle_purchase)
+    handle_purchase_func_ptr handle_purchase_ptr;
+    ConfirmPurchaseScreen(std::string _item, int _amount,
+                          handle_purchase_func_ptr _handle_purchase) : item(_item),
+                                                                       amount(_amount),
+                                                                       handle_purchase_ptr(_handle_purchase)
     {
         num_opts = -1;
     }
@@ -521,7 +537,8 @@ public:
         //displays options
         draw_box(45);
         std::cout << "\n\tConfirm Purchase\n"
-                     "\n\tBuy " << item << " for GHS ¢" << amount << " ?\n\n";
+                     "\n\tBuy "
+                  << item << " for GHS ¢" << amount << " ?\n\n";
         std::cout << "\t1\tConfirm\n"
                      "\t0\tCancel\n\n";
         draw_box(45);
@@ -572,15 +589,14 @@ public:
         num_opts = -1;
         num_retries = 0;
         next_screen = _next_screen;
-        action=nullptr;
+        action = nullptr;
     }
     VerifyPasswordScreen(Action *_action)
     {
         num_opts = -1;
         num_retries = 0;
         action = _action;
-        next_screen=nullptr;
-
+        next_screen = nullptr;
     }
     VerifyPasswordScreen(std::string _phone_number, int _amount)
     {
@@ -657,7 +673,7 @@ public:
     std::string msg;
     handle_purchase_func_ptr handle_purchase_ptr;
     int arg;
-    PurchaseSuccessAction(std::string _msg,  handle_purchase_func_ptr _handle_purchase_ptr, int _arg)
+    PurchaseSuccessAction(std::string _msg, handle_purchase_func_ptr _handle_purchase_ptr, int _arg)
     {
         msg = _msg;
         handle_purchase_ptr = _handle_purchase_ptr;
@@ -674,7 +690,7 @@ public:
 
         sleep(3);
         clear_screen();
-        
+
         // handle_selection(0);
     }
 };
@@ -710,7 +726,11 @@ class DataBundlesScreen : public Screen
 {
 public:
     int num_retries;
-    DataBundlesScreen() { num_opts = 6; num_retries=0;}
+    DataBundlesScreen()
+    {
+        num_opts = 6;
+        num_retries = 0;
+    }
 
     void display(bool showPrompt = true)
     {
@@ -738,7 +758,11 @@ class VoiceBundlesScreen : public Screen
 {
 public:
     int num_retries;
-    VoiceBundlesScreen() { num_opts = 6; num_retries=0;}
+    VoiceBundlesScreen()
+    {
+        num_opts = 6;
+        num_retries = 0;
+    }
 
     void display(bool showPrompt = true)
     {
@@ -761,7 +785,6 @@ public:
     }
     Screen *handle_selection(long int selection);
 };
-
 
 HomeScreen *return_home()
 {
@@ -1068,7 +1091,6 @@ Screen *CashoutAllowedScreen::handle_selection(long int selection)
     return return_home();
 }
 
-
 Screen *BalanceScreen::handle_selection(long int selection)
 {
     MyWalletScreen *mw_ptr;
@@ -1340,7 +1362,7 @@ Screen *VerifyPasswordScreen::handle_selection(long int selection)
         }
         else if (action != nullptr)
         {
-            
+
             action->perform_action();
             return return_home();
         }
@@ -1355,7 +1377,6 @@ Screen *VerifyPasswordScreen::handle_selection(long int selection)
         }
     }
 }
-
 
 int main()
 {
@@ -1387,5 +1408,4 @@ int main()
     return 0;
 }
 
-
-// # todo purchase for others 
+// # todo purchase for others
