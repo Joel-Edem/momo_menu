@@ -7,6 +7,7 @@
 #endif
 
 int isRunning = 1;
+typedef void (*handle_purchase_func_ptr)(int amt);
 
 void clear_screen()
 // Clears text from console
@@ -82,7 +83,6 @@ public:
     }
 };
 UserAccount *user_account_ptr;
-typedef void (*handle_purchase_func_ptr)(int amt);
 
 void buyAirtime_func(int amt)
 {
@@ -410,7 +410,7 @@ public:
                      "\n\t\tSelect Option\n\n";
         std::cout << "\t1\tAirtime\n"
                      "\t2\tData Bundles\n"
-                     "\t3 *\tVoice Bundles\n"
+                     "\t3\tVoice Bundles\n"
                      "\t0\tBack\n\n";
         draw_box(45);
         if (showPrompt == 1)
@@ -536,7 +536,7 @@ public:
 class MomoScreen : public Screen
 {
 public:
-    MomoScreen() { num_opts = 6; }
+    MomoScreen() { num_opts = 4; }
 
     void display(bool showPrompt = true)
     {
@@ -546,10 +546,8 @@ public:
                      "\n\t\tSelect An Option\n\n";
         std::cout << "\t1\tMomo User\n"
                      "\t2\tNon Momo User\n"
-                     "\t3 *\tSend With Care\n"
-                     "\t4 *\tFavourite\n"
-                     "\t5\tOther Networks\n"
-                     "\t6 *\tBank Account\n"
+                     "\t3\tOther Networks\n"
+                     "\t4 *\tBank Account\n"
                      "\t0\tMain Menu\n\n";
         draw_box(45);
         if (showPrompt == 1)
@@ -915,7 +913,7 @@ Screen *MomoScreen::handle_selection(long int selection)
         stms_ptr->display();
         return stms_ptr;
     case 2:
-    case 5:
+    case 4:
         SelectNetworkScreen *sns_ptr;
         sns_ptr = new SelectNetworkScreen();
         sns_ptr->display();
