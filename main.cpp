@@ -90,6 +90,7 @@ void buyAirtime_func(int amt)
     user_account_ptr->balance -= amt;
     user_account_ptr->airtime += amt;
 }
+
 void buyDataBundle_func(int amt)
 {
 
@@ -121,6 +122,35 @@ void buyDataBundle_func(int amt)
     
     user_account_ptr->balance-=amt;
     user_account_ptr->data+=data;
+}
+
+void buyVoiceBundle_func(int amt)
+{
+    int mins;
+    switch (amt)
+    {
+    case 40:
+        mins = 120;
+        break;
+    case 30:
+        mins = 100;
+        break;
+    case 20:
+        mins = 60;
+        break;
+    case 15:
+        mins = 45;
+        break;
+    case 10:
+        mins = 20;
+        break;
+    case 5:
+        mins = 10;
+        break;
+    }
+    
+    user_account_ptr->balance-=amt;
+    user_account_ptr->mins+=mins;
 }
 
 std::string phone_num_to_str(long int input)
@@ -425,15 +455,15 @@ public:
         std::cout << "\n\t\t My Wallet\n"
                      "\n\t\tCurrent Balance\n\n";
 
-        std::cout << "\tCurrent Momo Balance\tGHS¢ " << user_account_ptr->balance << "\n"
-                                                                                     "\tAirtime             \tGHS¢ "
+        std::cout << "\tCurrent Momo Balance\tGHS¢ "
+                    << user_account_ptr->balance << "\n"
+                    << "\tAirtime             \tGHS¢ "
                   << user_account_ptr->airtime << "\n"
-                                                  "\tMinutes             \t"
+                    << "\tMinutes             \t"
                   << user_account_ptr->mins << " Mins\n"
-                                               "\tData                \t"
-                  << user_account_ptr->data << " Mb\n"
-
-                                               "\n\n\t\tPress 0 Back\n\n";
+                  <<"\tData                \t"
+                  << user_account_ptr->data << " Gb\n"
+                  <<"\n\n\t\tPress 0 Back\n\n";
         draw_box(45);
     }
     Screen *handle_selection(long int selection);
@@ -706,6 +736,34 @@ public:
     Screen *handle_selection(long int selection);
 };
 
+class VoiceBundlesScreen : public Screen
+{
+public:
+    int num_retries;
+    VoiceBundlesScreen() { num_opts = 6; num_retries=0;}
+
+    void display(bool showPrompt = true)
+    {
+        //displays options
+        draw_box(45);
+        std::cout << "\n\t\tBuy Voice Bundle\n"
+                     "\n\t\tSelect Option\n\n";
+        std::cout << "\t1\t120 mins at GHS¢ 40\n"
+                     "\t2\t100 mins at GHS¢ 30\n"
+                     "\t3\t60  mins at GHS¢ 20\n"
+                     "\t4\t45  mins at GHS¢ 15\n"
+                     "\t5\t20  mins at GHS¢ 10\n"
+                     "\t6\t10  mins at GHS¢ 5\n"
+                     "\t0\tBack\n\n";
+        draw_box(45);
+        if (showPrompt == 1)
+        {
+            std::cout << "Enter your selection==> ";
+        }
+    }
+    Screen *handle_selection(long int selection);
+};
+
 
 HomeScreen *return_home()
 {
@@ -775,6 +833,71 @@ Screen *DataBundlesScreen::handle_selection(long int selection)
         // send to confirmation screen
         ConfirmPurchaseScreen *cps_ptr;
         cps_ptr = new ConfirmPurchaseScreen(label + "data bundle", amt, buyDataBundle_func);
+        cps_ptr->display();
+        return cps_ptr;
+    }
+}
+
+Screen *VoiceBundlesScreen::handle_selection(long int selection)
+{
+    int amt;
+    std::string label;
+    switch (selection)
+    {
+    case 1:
+        amt = 40;
+        label = "120 mins ";
+        break;
+    case 2:
+        amt = 30;
+        label = "100 mins ";
+        break;
+    case 3:
+        amt = 20;
+        label = "60 mins ";
+        break;
+    case 4:
+        amt = 15;
+        label = "45 mins ";
+        break;
+    case 5:
+        amt = 10;
+        label = "20 mins ";
+        break;
+    case 6:
+        amt = 5;
+        label = "10 mins ";
+        break;
+    default:
+        return return_home();
+    }
+    if (amt > user_account_ptr->balance)
+    {
+        // amt too large
+        //display insufficient fund msg
+        if (this->num_retries < 3)
+        {
+            this->num_retries++;
+            draw_box(45);
+            std::cout << "\n\nInsufficient funds.\nYour current balance is GHS¢ " << user_account_ptr->balance << "\n\n"
+                      << std::endl;
+            draw_box(45);
+            sleep(2);
+            clear_screen();
+            this->display();
+            return this;
+        }
+        else
+        {
+            show_transaction_failed_message();
+            return return_home();
+        }
+    }
+    else
+    {
+        // send to confirmation screen
+        ConfirmPurchaseScreen *cps_ptr;
+        cps_ptr = new ConfirmPurchaseScreen(label + "voice bundle", amt, &buyVoiceBundle_func);
         cps_ptr->display();
         return cps_ptr;
     }
@@ -905,12 +1028,18 @@ Screen *AirtimeAndBundlesScreen::handle_selection(long int selection)
         bat_ptr = new BuyAirtimeScreen();
         bat_ptr->display();
         return bat_ptr;
-    case 2: //  AirtimeScreen
+    case 2: //  Data bundles Screen
         // todo select netowork to buy for
         DataBundlesScreen *dbs_ptr;
         dbs_ptr = new DataBundlesScreen();
         dbs_ptr->display();
         return dbs_ptr;
+    case 3: //  Voice Bundles Screen
+        // todo select netowork to buy for
+        VoiceBundlesScreen *vbs_ptr;
+        vbs_ptr = new VoiceBundlesScreen();
+        vbs_ptr->display();
+        return vbs_ptr;
     default:
         this->display(false);
         std::cout << "Sorry this feature is currently not available\n"
